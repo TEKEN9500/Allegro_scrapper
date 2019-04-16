@@ -8,7 +8,11 @@ Weighted mean takes popularity of certain price into consideration (and ignores 
 
 
 Allegro.py - downloads the GPU data from allegro.pl
+
 Archiwum_scarp.py - downloads the GPU data from archive of allegro's offers
+
 GUI.py - it runs the application with GUI, takes in model and puts out statistics
+
 archiwum_1.csv, global_df_2.csv - saved to csv dataframes that were engineered in allegro.py and archiwum_scarp.py
+
 Terminal_noGui.py    - version of app to run in terminal with no GUI (basically the function display_stats in GUI)
