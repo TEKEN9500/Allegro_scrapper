@@ -46,6 +46,13 @@ for page in range(1, 100):
 del post, posts, values, soup, parameters, page, response, p, offer, name, link, kupione, price
 ###
 
+"""
+Now in column "Kupione" we have a full sentence "60 osób kupiło 65 sztuk" which means "60 people bought 65 units".
+I will extract the digit before "sz" to get only how many units were bought. This will later provide information
+for calculation of weighted mean which will be more relevant than simple mean of price of all observation for a
+given GPU model. Weighted mean will ignore the prices at which people did not buy, and promote prices that made
+the offer popular, which is crucial as the project goal is to advise the real price of given GPU on current market.
+"""
 global_df['Kupione'] = global_df['Kupione'].str.extract('(\d+) sz',expand=False)
 global_df.loc[global_df['Kupione'].isnull(), 'Kupione'] = 0
 global_df = global_df[global_df['Producent chipsetu:'].isin(values=['AMD', 'NVIDIA'])]
