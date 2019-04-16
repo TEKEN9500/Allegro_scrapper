@@ -51,6 +51,7 @@ del post, posts, values, soup, parameters, page, response, p, offer, name, link,
 
 
 
+
 """ ------------------------------------------PROCESSING OF DATA---------------------------------------------------------------------
 
 Now in column "Kupione" we have a full sentence "60 osób kupiło 65 sztuk" which means "60 people bought 65 units".
@@ -66,6 +67,7 @@ global_df.loc[global_df['Kupione'].isnull(), 'Kupione'] = 0
 global_df = global_df[global_df['Producent chipsetu:'].isin(values=['AMD', 'NVIDIA']) ]
 global_df = global_df[global_df['Cena']>400]           #get only GPUs with price higher than 400
 global_df.reset_index(drop=True, inplace=True)
+
 
 
 
@@ -113,7 +115,7 @@ del pat
 
 
 
-#----------------------------Print percentages of missing data for each column and if more than 10% DROP it-----------------------
+#----------------------------Print percentages of missing data for each column and if more than 10% is missing DROP it-----------------------
 
 for column in list(global_df.columns):
     nan_percent = ((global_df[column].isnull().sum())/len(global_df))*100
@@ -128,7 +130,11 @@ global_df.reset_index(drop=True, inplace=True)
 
 
 
-# ---------------------------------------TU SKOŃCZYŁEM------------------------------------------------
+# ---------------------------------GETTING PRODUCER OUT OF NAME------------------------------------------------
+
+#There are many observations which contain "Inny producent"("Other producent") in Producent: column.
+#For those rows I will try to find producers out of foregoing list in the name of the offer. If this is not 
+#possible I will drop such row.
 
 producers_list = ['ASUS','Asus','MSI','Msi', 'msi','Gainward','GAINWARD','Gigabyte','GIGABYTE','Evga',
                   'EVGA','ZOTAC', 'Zotac','GALAX', 'Galax','Pny', 'PNY','PALIT', 'Palit','POWERCOLOR',
@@ -156,9 +162,8 @@ del producers_list
 
 
 
-global_df['Nr model'] = global_df['Nazwa'].str.extract('((?i)\d\d\d\d*[ -]*ti|(?i)\d\d\d\d*)', expand=False).str.replace(" ","").str.lower()
 
-
+#-------------------------------------EXTRACTING MODEL OUT OF NAME USING REGEX-------------------------------
 
 
 global_df['Nr model'] = global_df['Nazwa'].str.extract('((?i)\d\d\d\d*[ -]*ti|'   #GTX 1080 Ti, RTX-2080-ti
@@ -170,30 +175,38 @@ global_df['Nr model'] = global_df['Nazwa'].str.extract('((?i)\d\d\d\d*[ -]*ti|' 
                                                        expand=False).str.replace(" ","").str.lower()
 
 
-global_df.drop(global_df[global_df['Nr model'].isnull()].index, axis = 0, inplace = True)
-global_df.reset_index(drop=True, inplace=True)
+
+#-----------------------------------------FINAL PROCESSING-----------------------------------------------------------------
+
+global_df.drop(global_df[global_df['Nr model'].isnull()].index, axis = 0, inplace = True)#drop rows with no model
+global_df.reset_index(drop=True, inplace=True)                                           #drop unnecesary index column
 global_df.rename(columns = {'Unnamed: 0':'Index'}, inplace=True)
 
-global_df = global_df[['Cena','Kupione', 'Chłodzenie:', 'Faktura:',
-       'Interfejs złącza karty:', 'Pamięć:',
-       'Producent chipsetu:', 'Producent:', 'Rodzaj pamięci:',
-       'Stan:', 'Szyna pamięci:', 'Model', 'Nr model']]
+global_df = global_df[['Cena','Kupione', 'Chłodzenie:', 'Faktura:',       #Take only columns which provide important numerical
+       'Interfejs złącza karty:', 'Pamięć:',                              #information or in case of categorical variables could
+       'Producent chipsetu:', 'Producent:', 'Rodzaj pamięci:',            #be sensibly turned into dummies for model processing.
+       'Stan:', 'Szyna pamięci:', 'Model', 'Nr model']]                         
 
-global_df['Model'] = global_df['Model']+global_df['Nr model']
+global_df['Model'] = global_df['Model']+global_df['Nr model']      #Create one variable - full model name
 global_df.drop('Nr model', axis=1, inplace=True, )
 
-for i in range(0,len(global_df)):
-    if 'GB' in global_df['Pamięć:'][i]:
+
+"""------------Turn memory variable into numerical one by dropping "GB" but drop the observation ---------------------
+               if the memory is less than 1 GB (so it does have MB instead of GB next to it) """
+
+for i in range(0,len(global_df)):             
+    if 'GB' in global_df['Pamięć:'][i]:      
         global_df.loc[i, 'Pamięć:'] = global_df['Pamięć:'][i].replace(' GB', '')
     else:
         global_df.drop(i, axis=0, inplace=True)
 
 global_df['Pamięć:'] = global_df['Pamięć:'].astype(int)
+
+#turning memory bus into int type by removing "-bit"
 global_df['Szyna pamięci:'] = global_df['Szyna pamięci:'].str.replace('-bit', '').astype(int)
 
-global_df.to_csv('global_df_2.csv')
+global_df.to_csv('global_df_2.csv') #saving dataframe as csv file
 
-global_df_dummy = pd.get_dummies(global_df)
-global_df_dummy.to_csv('global_df_dummy_2.csv')
-
-global_df = pd.read_csv('global_df_2.csv')
+#global_df_dummy = pd.get_dummies(global_df) for modelling if necessary
+#global_df_dummy.to_csv('global_df_dummy_2.csv')
+#global_df = pd.read_csv('global_df_2.csv')
