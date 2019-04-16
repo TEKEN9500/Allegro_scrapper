@@ -4,6 +4,10 @@ import re
 import pandas as pd
 import numpy as np
 
+
+
+# -------------------------DOWNLOAD ALL INFORMATION AND CREATE DATAFRAME------------------------------------------------------
+
 p = re.compile('https://allegro.pl/oferta/.+?(?=")') #pattern to later extract link of a given offer
 global_df = pd.DataFrame()
 counter = 0              #used to display which paged is being processed, because I am impatient
@@ -44,9 +48,11 @@ for page in range(1, 100):
         print(link)
 
 del post, posts, values, soup, parameters, page, response, p, offer, name, link, kupione, price
-###
 
-"""
+
+
+""" ------------------------------------------PROCESSING OF DATA---------------------------------------------------------------------
+
 Now in column "Kupione" we have a full sentence "60 osób kupiło 65 sztuk" which means "60 people bought 65 units".
 I will extract the digit before "sz" to get only how many units were bought. This will later provide information
 for calculation of weighted mean which will be more relevant than simple mean of price of all observation for a
@@ -55,12 +61,16 @@ the offer popular, which is crucial as the project goal is to advise the real pr
 """
 global_df['Kupione'] = global_df['Kupione'].str.extract('(\d+) sz',expand=False)
 global_df.loc[global_df['Kupione'].isnull(), 'Kupione'] = 0
-global_df = global_df[global_df['Producent chipsetu:'].isin(values=['AMD', 'NVIDIA'])]
-global_df = global_df[global_df['Cena']>400]
+
+#get chipset producers that are AMD or NVIDIA (almost all of them)
+global_df = global_df[global_df['Producent chipsetu:'].isin(values=['AMD', 'NVIDIA']) ]
+global_df = global_df[global_df['Cena']>400]           #get only GPUs with price higher than 400
 global_df.reset_index(drop=True, inplace=True)
 
 
-#getting only model with RX, RTX, GTX, Quadro in the name:
+
+#-------------------------Getting only models with RX, RTX, GTX, Quadro in the name (almost all of them): ----------------------------
+
 global_df['Model'] = 'NA'
 models= ['Rx','rx','RX', 'Rtx', 'RTX','rtx','GTX', 'gtx','Gtx', 'Quadro', 'quadro', 'QUADRO']
 
@@ -85,6 +95,9 @@ del models
 
 
 
+
+#  ----------------------------------Remove useless words from name-------------------------------------------------------------
+
 remove_words = ['karta', 'Karta', 'KARTA', 'Graficzna', 'GRAFICZNA', 'graficzna',
                 'wyprzedaż', 'WYPRZEDAŻ', 'Wyprzedaż', 'GRAFIKA', 'Grafika', 'grafika',
                 'POTĘŻNA', 'DLA GRACZA', ' !!!', '!!!' ,'!', 'grafiki', 'kar', 'NVIDIA',
@@ -97,20 +110,30 @@ del remove_words
 global_df['Nazwa'] = global_df['Nazwa'].str.replace(pat, '')
 del pat
 
+
+
+
+#----------------------------Print percentages of missing data for each column and if more than 10% DROP it-----------------------
+
 for column in list(global_df.columns):
-    nan_percent = ((global_df[column].isnull().sum())/3454)*100
+    nan_percent = ((global_df[column].isnull().sum())/len(global_df))*100
     print('{}  :  {}% missing'.format(column,nan_percent))
 
     if nan_percent >= 10:
         global_df.drop(column, axis = 1, inplace = True)
         print('\n DELETED \n')
 
+global_df.reset_index(drop=True, inplace=True)
+
+
+
+
+# ---------------------------------------TU SKOŃCZYŁEM------------------------------------------------
 
 producers_list = ['ASUS','Asus','MSI','Msi', 'msi','Gainward','GAINWARD','Gigabyte','GIGABYTE','Evga',
                   'EVGA','ZOTAC', 'Zotac','GALAX', 'Galax','Pny', 'PNY','PALIT', 'Palit','POWERCOLOR',
                   'PowerColor','SAPPHIRE', 'Sapphire', 'INNO3D','VISIONTEK', 'ASROCK', 'MANLI',
                   'Inno3D', 'XFX', 'HIS', 'VisionTek', 'ASRock', 'AFOX', 'Manli', ]
-global_df.reset_index(drop=True, inplace=True)
 
 for i in range(0,len(global_df)):
     if global_df.loc[i, 'Producent:'] == "Inny producent":
@@ -129,6 +152,8 @@ for i in range(0,len(global_df)):
             global_df.loc[i,'Nazwa']= global_df['Nazwa'][i].replace(word, '')
 
 del producers_list
+
+
 
 
 global_df['Nr model'] = global_df['Nazwa'].str.extract('((?i)\d\d\d\d*[ -]*ti|(?i)\d\d\d\d*)', expand=False).str.replace(" ","").str.lower()
