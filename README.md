@@ -1,8 +1,8 @@
 # Allegro_scrapper
 
-The objective of the project is to advise the real price of given GPU on current market.
+The objective of the project is to advise the real price of given GPU on current market and scrapp information about GPUs from online shop Allegro (biggest online shop in Poland)
 
-It downloads data about all GPUs from first 100 pages on Allegro.pl and first 160 pages of allegro.archiwum - archive.
+It downloads data(price, memory, condition and other parameters) about all GPUs from first 100 pages on Allegro.pl and first 160 pages of allegro.archiwum - archive.
 It involves simple GUI to input what GPU I want information about designed in QT Designer. Information about used and new models are separeted. 
 Weighted mean takes popularity of certain price into consideration (and ignores the offers which no-one bought).
 
