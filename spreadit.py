@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 import weighted
 
+""" -------- THIS IS BASICALLY THE DISPLAY_STATS FUNCTION FROM GUI.PY FILE BUT IS ABLE TO RUN IN TERMINAL WITHOUT GUI---------"""
+#and here the labels for statistics are in polish 
+#instead of saving it to output variable its just using print
+
 global_df = pd.read_csv('global_df_2.csv')
 archiwum = pd.read_csv('archiwum_1.csv')
 global_df = global_df.append(archiwum, sort=False)
@@ -76,8 +80,3 @@ else:
         print("\n Mediana ważona : " + str(weighted.median(used['Cena'], used['Kupione'])))
         print("\n Statystyki: \n ")
         print(used["Cena"].describe())
-str(asdd)
-asdd =  "siuba siuba \n"
-asdd += "siuba siuba iii "
-
-a = used["Cena"].describe().to_string()
